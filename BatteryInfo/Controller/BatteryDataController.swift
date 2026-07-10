@@ -1362,6 +1362,18 @@ class BatteryDataController {
     }
 
 
+
+    // 获取简化首页条目（仅5项）
+    public func getSimplifiedHomeItems() -> [InfoItem] {
+        return [
+            getBatteryTemperature(),
+            getInstantAmperage(),
+            getMaximumChargingHandshakeWatts(),
+            getPowerOptionDetail(),
+            calculatedChargingPower()
+        ]
+    }
+    
     static func recordBatteryData(manualRecord: Bool, cycleCount: Int, nominalChargeCapacity: Int, designCapacity: Int) -> Bool {
         
         let databaseManager = BatteryRecordDatabaseManager.shared

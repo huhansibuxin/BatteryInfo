@@ -14,7 +14,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         BatteryDataController.configureInstance(provider: IOKitBatteryDataProvider())
         // 加载root view
         window = UIWindow(frame: UIScreen.main.bounds)
-        window!.rootViewController = MainUITabBarController()
+        window!.rootViewController = UINavigationController(rootViewController: HomeViewController())
         window!.makeKeyAndVisible()
         return true
     }
