@@ -1,0 +1,44 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Theos
+        run: |
+          export THEOS=/opt/theos
+          echo "THEOS=${THEOS}" >> $GITHUB_ENV
+          if [ -d "$THEOS" ]; then
+            echo "[CI] Theos already exists, pulling latest..."
+            cd $THEOS && git pull
+          else
+            echo "[CI] Cloning Theos..."
+            sudo git clone --depth 1 https://github.com/theos/theos.git $THEOS
+            sudo chown -R $(whoami):staff $THEOS
+          fi
+
+      - name: Install Dependencies
+        run: |
+          brew install ldid dpkg
+
+      - name: Build IPA
+        run: |
+          make package PACKAGE_FORMAT=ipa
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BatteryInfo-tipa
+          path: packages/*.tipa
+          if-no-files-found: error
