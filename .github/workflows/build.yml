@@ -37,13 +37,36 @@ jobs:
         run: |
           brew install ldid dpkg make
 
-      - name: Build IPA
+      - name: Build & Stage
         run: |
           make package PACKAGE_FORMAT=ipa
+
+      - name: Create IPA
+        run: |
+          # xcodeproj.mk doesn't create IPA automatically, do it manually
+          STAGING_DIR="$(make -s print-THEOS_STAGING_DIR 2>/dev/null || echo '.theos/obj/_')"
+          APP_NAME="BatteryInfo"
+          APP_PATH="${STAGING_DIR}/Applications/${APP_NAME}.app"
+
+          echo "Staging dir: ${STAGING_DIR}"
+          echo "App path: ${APP_PATH}"
+          ls -la "${APP_PATH}" || { echo ".app not found, listing staging:"; find "${STAGING_DIR}" -maxdepth 3 -type d; exit 1; }
+
+          mkdir -p Payload
+          cp -R "${APP_PATH}" Payload/
+          rm -rf Payload/"${APP_NAME}.app"/_CodeSignature 2>/dev/null || true
+
+          IPA_FILE="BatteryInfo.ipa"
+          zip -r "${IPA_FILE}" Payload
+          rm -rf Payload
+
+          mkdir -p packages
+          cp "${IPA_FILE}" packages/
+          echo "IPA size: $(ls -lh packages/${IPA_FILE} | awk '{print $5}')"
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BatteryInfo-tipa
-          path: packages/*.tipa
+          name: BatteryInfo-ipa
+          path: packages/BatteryInfo.ipa
           if-no-files-found: error
