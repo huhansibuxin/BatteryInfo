@@ -17,20 +17,25 @@ jobs:
 
       - name: Setup Theos
         run: |
-          export THEOS=/opt/theos
+          THEOS=/opt/theos
           echo "THEOS=${THEOS}" >> $GITHUB_ENV
-          if [ -d "$THEOS" ]; then
+          if [ -d "$THEOS/.git" ]; then
             echo "[CI] Theos already exists, pulling latest..."
             cd $THEOS && git pull
+            sudo chown -R $(whoami):staff $THEOS
           else
             echo "[CI] Cloning Theos..."
-            sudo git clone --depth 1 https://github.com/theos/theos.git $THEOS
+            sudo git clone --depth 1 --recurse-submodules https://github.com/theos/theos.git $THEOS
             sudo chown -R $(whoami):staff $THEOS
           fi
 
+      - name: Update Theos Vendors
+        run: |
+          ${THEOS}/bin/update-theos
+
       - name: Install Dependencies
         run: |
-          brew install ldid dpkg
+          brew install ldid dpkg make
 
       - name: Build IPA
         run: |
